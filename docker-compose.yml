@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: portfolio_manager_app
+    volumes:
+      - .:/app
+      - ./data:/root/  # Mount the data directory to persist the SQLite database
+    environment:
+      - ALPHAVANTAGE_API_KEY=${ALPHAVANTAGE_API_KEY}
+    tty: true
