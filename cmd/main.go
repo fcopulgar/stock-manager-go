@@ -12,8 +12,8 @@ func main() {
 
 	// Initialize the repository and services
 	repo := repositories.NewSQLitePortfolioRepository("portfolios.db")
-	apiKey := config.GetEnv("ALPHAVANTAGE_API_KEY")
-	stockService := services.NewAlphaVantageService(apiKey)
+	apiKey := config.GetEnv("FMP_API_KEY")
+	stockService := services.NewFinancialModelingPrepService(apiKey)
 	portfolioService := services.NewPortfolioService(repo, stockService)
 
 	// Start the CLI
