@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/fcopulgar/stock-manager-go/api"
 	"github.com/fcopulgar/stock-manager-go/models"
 	"strconv"
 	"strings"
@@ -95,7 +96,84 @@ func (cli *CLI) editPortfolio(portfolio *models.Portfolio) {
 }
 
 func (cli *CLI) createPortfolioManual() {
-	// TODO
+	fmt.Print("Enter the name of the portfolio: ")
+	name, _ := cli.reader.ReadString('\n')
+	name = strings.TrimSpace(name)
+
+	symbols, err := api.GetSP500Symbols()
+	if err != nil {
+		fmt.Printf("Error retrieving S&P 500 symbols: %v\n", err)
+		return
+	}
+
+	var stocks []models.Stock
+
+	for {
+		fmt.Println("-Select a stock from the S&P 500 or press Enter to finish:")
+		for i, symbol := range symbols {
+			fmt.Printf("%d. %s\n", i+1, symbol)
+		}
+
+		fmt.Print("Stock number: ")
+		input, _ := cli.reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+
+		if input == "" {
+			break
+		}
+
+		index, err := strconv.Atoi(input)
+		if err != nil || index < 1 || index > len(symbols) {
+			fmt.Println("Invalid input.")
+			continue
+		}
+
+		symbol := symbols[index-1]
+
+		fmt.Printf("Enter the quantity of shares for %s: ", symbol)
+		qtyInput, _ := cli.reader.ReadString('\n')
+		qtyInput = strings.TrimSpace(qtyInput)
+		quantity, err := strconv.Atoi(qtyInput)
+		if err != nil || quantity <= 0 {
+			fmt.Println("Invalid quantity.")
+			continue
+		}
+
+		fmt.Printf("Enter the purchase date (YYYY-MM-DD) for %s: ", symbol)
+		dateInput, _ := cli.reader.ReadString('\n')
+		dateInput = strings.TrimSpace(dateInput)
+		buyDate, err := time.Parse("2006-01-02", dateInput)
+		if err != nil {
+			fmt.Println("Invalid date.")
+			continue
+		}
+
+		stock := models.Stock{
+			Symbol:   symbol,
+			Quantity: quantity,
+			BuyDate:  buyDate,
+		}
+
+		stocks = append(stocks, stock)
+	}
+
+	if len(stocks) == 0 {
+		fmt.Println("No stocks added to the portfolio.")
+		return
+	}
+
+	portfolio := &models.Portfolio{
+		Name:   name,
+		Stocks: stocks,
+	}
+
+	err = cli.portfolioService.Repo.Save(portfolio)
+	if err != nil {
+		fmt.Printf("Error saving portfolio: %v\n", err)
+		return
+	}
+
+	fmt.Println("Portfolio created successfully.")
 }
 
 func (cli *CLI) createPortfolioRandom() {
