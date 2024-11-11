@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/fcopulgar/stock-manager-go/api"
 	"github.com/fcopulgar/stock-manager-go/models"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -177,7 +178,57 @@ func (cli *CLI) createPortfolioManual() {
 }
 
 func (cli *CLI) createPortfolioRandom() {
-	// TODO
+	symbols, err := api.GetSP500Symbols()
+	if err != nil {
+		fmt.Printf("Error retrieving S&P 500 symbols: %v\n", err)
+		return
+	}
+
+	var stocks []models.Stock
+
+	rand.Seed(time.Now().UnixNano())
+	for i := 0; i < 5; i++ {
+		index := rand.Intn(len(symbols))
+		symbol := symbols[index]
+
+		quantity := rand.Intn(100) + 1 // Between 1 and 100
+
+		// Random date within the last 5 years
+		start := time.Now().AddDate(-5, 0, 0).Unix()
+		end := time.Now().Unix()
+		timestamp := rand.Int63n(end-start) + start
+		buyDate := time.Unix(timestamp, 0)
+
+		stock := models.Stock{
+			Symbol:   symbol,
+			Quantity: quantity,
+			BuyDate:  buyDate,
+		}
+
+		stocks = append(stocks, stock)
+	}
+
+	portfolio := &models.Portfolio{
+		Name:   fmt.Sprintf("Random Portfolio %d", rand.Intn(1000)),
+		Stocks: stocks,
+	}
+
+	err = cli.portfolioService.Repo.Save(portfolio)
+	if err != nil {
+		fmt.Printf("Error saving portfolio: %v\n", err)
+		return
+	}
+
+	// Calculate APR
+	startDate := earliestBuyDate(*portfolio)
+	endDate := time.Now()
+	apr, err := cli.portfolioService.CalculateAPR(portfolio, startDate, endDate)
+	if err != nil {
+		fmt.Printf("Error calculating APR: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Random portfolio created successfully. APR: %.2f%%\n", apr*100)
 }
 
 func earliestBuyDate(portfolio models.Portfolio) time.Time {
