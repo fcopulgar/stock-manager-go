@@ -1,8 +1,12 @@
 package services
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -11,7 +15,6 @@ import (
 type FinancialModelingPrepService struct {
 	APIKey string
 	Client *resty.Client
-	cache  map[string]map[string]StockPrices
 }
 
 type StockPrices struct {
@@ -24,24 +27,17 @@ func NewFinancialModelingPrepService(apiKey string) *FinancialModelingPrepServic
 	return &FinancialModelingPrepService{
 		APIKey: apiKey,
 		Client: client,
-		cache:  make(map[string]map[string]StockPrices),
 	}
 }
 
 func (fmp *FinancialModelingPrepService) GetPriceOpen(symbol string, date time.Time) (float64, error) {
 	dateStr := date.Format("2006-01-02")
 
-	// local cache
-	if prices, ok := fmp.cache[symbol]; ok {
-		if stockPrices, ok := prices[dateStr]; ok {
-			return stockPrices.Open, nil
-		}
-	}
-
 	// Fetch the price data from the API
 	stockPrices, err := fmp.fetchStockPrices(symbol, date)
 	if err != nil {
-		return 0, err
+		fmt.Printf("Failed to retrieve open price for %s on %s.\n", symbol, dateStr)
+		return fmp.promptUserForPrice(symbol, date, "open")
 	}
 
 	return stockPrices.Open, nil
@@ -50,17 +46,11 @@ func (fmp *FinancialModelingPrepService) GetPriceOpen(symbol string, date time.T
 func (fmp *FinancialModelingPrepService) GetPriceClose(symbol string, date time.Time) (float64, error) {
 	dateStr := date.Format("2006-01-02")
 
-	// local cache
-	if prices, ok := fmp.cache[symbol]; ok {
-		if stockPrices, ok := prices[dateStr]; ok {
-			return stockPrices.Close, nil
-		}
-	}
-
 	// Fetch the price data from the API
 	stockPrices, err := fmp.fetchStockPrices(symbol, date)
 	if err != nil {
-		return 0, err
+		fmt.Printf("Failed to retrieve close price for %s on %s.\n", symbol, dateStr)
+		return fmp.promptUserForPrice(symbol, date, "close")
 	}
 
 	return stockPrices.Close, nil
@@ -74,7 +64,6 @@ func (fmp *FinancialModelingPrepService) fetchStockPrices(symbol string, date ti
 		symbol, dateStr, endDateStr, fmp.APIKey)
 
 	resp, err := fmp.Client.R().Get(url)
-
 	if err != nil {
 		return StockPrices{}, err
 	}
@@ -107,11 +96,21 @@ func (fmp *FinancialModelingPrepService) fetchStockPrices(symbol string, date ti
 		Close: historicalData.Close,
 	}
 
-	// Store in cache
-	if _, ok := fmp.cache[symbol]; !ok {
-		fmp.cache[symbol] = make(map[string]StockPrices)
-	}
-	fmp.cache[symbol][dateStr] = stockPrices
-
 	return stockPrices, nil
+}
+
+func (fmp *FinancialModelingPrepService) promptUserForPrice(symbol string, date time.Time, priceType string) (float64, error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Please enter the %s price for %s on %s: ", priceType, symbol, date.Format("2006-01-02"))
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return 0, err
+	}
+	input = strings.TrimSpace(input)
+	price, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid price input")
+	}
+
+	return price, nil
 }
