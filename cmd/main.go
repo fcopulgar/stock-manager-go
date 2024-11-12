@@ -5,6 +5,7 @@ import (
 	"github.com/fcopulgar/stock-manager-go/config"
 	"github.com/fcopulgar/stock-manager-go/repositories"
 	"github.com/fcopulgar/stock-manager-go/services"
+	"os"
 )
 
 func main() {
@@ -17,6 +18,6 @@ func main() {
 	portfolioService := services.NewPortfolioService(repo, stockService)
 
 	// Start the CLI
-	cli := cli.NewCLI(portfolioService)
+	cli := cli.NewCLI(portfolioService, os.Stdin, os.Stdout)
 	cli.Run()
 }
