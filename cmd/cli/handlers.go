@@ -27,14 +27,22 @@ func (cli *CLI) viewPortfolios() {
 		fmt.Println("Stocks:")
 		for _, stock := range p.Stocks {
 			fmt.Printf("- %s: %d shares bought on %s\n", stock.Symbol, stock.Quantity, stock.BuyDate.Format("2006-01-02"))
+
+			// Attempt to get the price of the stock on the buy date
+			price, err := cli.portfolioService.StockService.GetPriceClose(stock.Symbol, stock.BuyDate)
+			if err != nil {
+				fmt.Printf("  Price on %s: Could not retrieve price (%v)\n", stock.BuyDate.Format("2006-01-02"), err)
+			} else {
+				fmt.Printf("  Price on %s: $%.2f\n", stock.BuyDate.Format("2006-01-02"), price)
+			}
 		}
 
-		// Calculate APR
+		// Calculate APR using the earliest buy date and today
 		startDate := earliestBuyDate(p)
 		endDate := time.Now()
 		apr, err := cli.portfolioService.CalculateAPR(&p, startDate, endDate)
 		if err != nil {
-			fmt.Printf("Error calculating APR: %v\n", err)
+			fmt.Printf("APR: Could not calculate APR (%v)\n", err)
 		} else {
 			fmt.Printf("APR: %.2f%%\n", apr*100)
 		}
@@ -193,8 +201,7 @@ func (cli *CLI) createPortfolioRandom() {
 
 		quantity := rand.Intn(100) + 1 // Between 1 and 100
 
-		// Random date within the last 5 years
-		start := time.Now().AddDate(-5, 0, 0).Unix()
+		start := time.Now().AddDate(-3, 0, 0).Unix()
 		end := time.Now().Unix()
 		timestamp := rand.Int63n(end-start) + start
 		buyDate := time.Unix(timestamp, 0)

@@ -2,12 +2,13 @@ package api
 
 import (
 	"encoding/csv"
+	"fmt"
 	"net/http"
 )
 
 func GetSP500Symbols() ([]string, error) {
 	url := "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
-
+	fmt.Println("Downloading: " + url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

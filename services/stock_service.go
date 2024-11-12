@@ -5,5 +5,6 @@ import (
 )
 
 type StockService interface {
-	GetPrice(symbol string, date time.Time) (float64, error)
+	GetPriceOpen(symbol string, date time.Time) (float64, error)
+	GetPriceClose(symbol string, date time.Time) (float64, error)
 }
