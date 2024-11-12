@@ -157,10 +157,17 @@ func (cli *CLI) createPortfolioManual() {
 			continue
 		}
 
+		buyPrice, err := cli.portfolioService.StockService.GetPriceClose(symbol, buyDate)
+		if err != nil {
+			fmt.Printf("Error getting price for %s on %s: %v... continuing with the next...\n", symbol, buyDate.Format("2006-01-02"), err)
+			continue
+		}
+
 		stock := models.Stock{
 			Symbol:   symbol,
 			Quantity: quantity,
 			BuyDate:  buyDate,
+			BuyPrice: buyPrice,
 		}
 
 		stocks = append(stocks, stock)
@@ -199,17 +206,24 @@ func (cli *CLI) createPortfolioRandom() {
 		index := rand.Intn(len(symbols))
 		symbol := symbols[index]
 
-		quantity := rand.Intn(100) + 1 // Between 1 and 100
+		quantity := rand.Intn(100) + 1
 
 		start := time.Now().AddDate(-3, 0, 0).Unix()
 		end := time.Now().Unix()
 		timestamp := rand.Int63n(end-start) + start
 		buyDate := time.Unix(timestamp, 0)
 
+		buyPrice, err := cli.portfolioService.StockService.GetPriceClose(symbol, buyDate)
+		if err != nil {
+			fmt.Printf("Error getting price for %s on %s: %v... continuing with the next...\n", symbol, buyDate.Format("2006-01-02"), err)
+			continue
+		}
+
 		stock := models.Stock{
 			Symbol:   symbol,
 			Quantity: quantity,
 			BuyDate:  buyDate,
+			BuyPrice: buyPrice,
 		}
 
 		stocks = append(stocks, stock)

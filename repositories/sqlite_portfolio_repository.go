@@ -37,6 +37,7 @@ func (repo *SQLitePortfolioRepository) createTables() {
         symbol TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         buy_date TEXT NOT NULL,
+        buy_price REAL NOT NULL,
         FOREIGN KEY(portfolio_id) REFERENCES portfolios(id)
     );`
 
@@ -120,12 +121,11 @@ func (repo *SQLitePortfolioRepository) Save(portfolio *models.Portfolio) error {
 		tx.Rollback()
 		return err
 	}
-	portfolio.ID = int(portfolioID)
 
 	for _, stock := range portfolio.Stocks {
 		_, err = tx.Exec(
-			"INSERT INTO stocks (portfolio_id, symbol, quantity, buy_date) VALUES (?, ?, ?, ?)",
-			portfolioID, stock.Symbol, stock.Quantity, stock.BuyDate.Format("2006-01-02"),
+			"INSERT INTO stocks (portfolio_id, symbol, quantity, buy_date, buy_price) VALUES (?, ?, ?, ?, ?)",
+			portfolioID, stock.Symbol, stock.Quantity, stock.BuyDate.Format("2006-01-02"), stock.BuyPrice,
 		)
 		if err != nil {
 			tx.Rollback()
@@ -193,7 +193,7 @@ func (repo *SQLitePortfolioRepository) getStocksByPortfolioID(portfolioID int) (
 	stocks := []models.Stock{}
 
 	rows, err := repo.DB.Query(
-		"SELECT symbol, quantity, buy_date FROM stocks WHERE portfolio_id = ?",
+		"SELECT id, symbol, quantity, buy_date, buy_price FROM stocks WHERE portfolio_id = ?",
 		portfolioID,
 	)
 	if err != nil {
@@ -205,7 +205,7 @@ func (repo *SQLitePortfolioRepository) getStocksByPortfolioID(portfolioID int) (
 		var stock models.Stock
 		var buyDateStr string
 
-		err := rows.Scan(&stock.Symbol, &stock.Quantity, &buyDateStr)
+		err := rows.Scan(&stock.ID, &stock.Symbol, &stock.Quantity, &buyDateStr, &stock.BuyPrice)
 		if err != nil {
 			return nil, err
 		}
