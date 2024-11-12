@@ -109,7 +109,7 @@ func (cli *CLI) createPortfolioManual() {
 	name, _ := cli.reader.ReadString('\n')
 	name = strings.TrimSpace(name)
 
-	symbols, err := api.GetSP500Symbols()
+	symbols, err := api.GetSP500Symbols(&api.DefaultHTTPClient{})
 	if err != nil {
 		fmt.Printf("Error retrieving S&P 500 symbols: %v\n", err)
 		return
@@ -186,7 +186,7 @@ func (cli *CLI) createPortfolioManual() {
 }
 
 func (cli *CLI) createPortfolioRandom() {
-	symbols, err := api.GetSP500Symbols()
+	symbols, err := api.GetSP500Symbols(&api.DefaultHTTPClient{})
 	if err != nil {
 		fmt.Printf("Error retrieving S&P 500 symbols: %v\n", err)
 		return
