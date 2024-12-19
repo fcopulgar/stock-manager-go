@@ -156,8 +156,8 @@ func (repo *SQLitePortfolioRepository) Update(portfolio *models.Portfolio) error
 
 	for _, stock := range portfolio.Stocks {
 		_, err = tx.Exec(
-			"INSERT INTO stocks (portfolio_id, symbol, quantity, buy_date) VALUES (?, ?, ?, ?)",
-			portfolio.ID, stock.Symbol, stock.Quantity, stock.BuyDate.Format("2006-01-02"),
+			"INSERT INTO stocks (portfolio_id, symbol, quantity, buy_date, buy_price) VALUES (?, ?, ?, ?, ?)",
+			portfolio.ID, stock.Symbol, stock.Quantity, stock.BuyDate.Format("2006-01-02"), stock.BuyPrice,
 		)
 		if err != nil {
 			tx.Rollback()
