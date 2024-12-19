@@ -6,11 +6,11 @@ import (
 )
 
 func TestGetEnv(t *testing.T) {
-	// Establecer una variable de entorno para la prueba
+	// Set an environment variable for the test
 	os.Setenv("TEST_KEY", "test_value")
-	defer os.Unsetenv("TEST_KEY") // Limpiar al finalizar
+	defer os.Unsetenv("TEST_KEY")
 
-	// Llamar a LoadConfig (aunque no tengamos .env, no debería fallar)
+	// Call LoadConfig (even if we don't have .env, it should not fail)
 	LoadConfig()
 
 	value := GetEnv("TEST_KEY")
@@ -20,16 +20,16 @@ func TestGetEnv(t *testing.T) {
 }
 
 func TestLoadConfig_NoEnvFile(t *testing.T) {
-	// No creamos un archivo .env para esta prueba
-	// Solo esperamos que no falle y no modifique variables preexistentes
+	// We do not create an .env file for this test.
+	// We just hope that it does not fail and does not modify pre-existing variables.
 
-	// Establecer una variable de entorno antes de LoadConfig
+	// Set an environment variable before LoadConfig
 	os.Setenv("PRE_EXISTING_KEY", "pre_value")
 	defer os.Unsetenv("PRE_EXISTING_KEY")
 
 	LoadConfig()
 
-	// Verificar que la variable no se haya alterado
+	// Verify that the variable has not been altered
 	value := GetEnv("PRE_EXISTING_KEY")
 	if value != "pre_value" {
 		t.Errorf("Expected 'pre_value', got '%s'", value)
@@ -37,15 +37,15 @@ func TestLoadConfig_NoEnvFile(t *testing.T) {
 }
 
 func TestLoadConfig_WithEnvFile(t *testing.T) {
-	// Creamos un .env temporal
+	// We create a temporary .env
 	content := "ENV_TEST_KEY=env_test_value\n"
 	err := os.WriteFile(".env", []byte(content), 0644)
 	if err != nil {
 		t.Fatalf("Error creating .env file: %v", err)
 	}
-	defer os.Remove(".env") // Limpiar el archivo al final
+	defer os.Remove(".env")
 
-	// Asegurarnos de que la variable no esté en el entorno
+	// Make sure that the variable is not in the environment
 	os.Unsetenv("ENV_TEST_KEY")
 
 	LoadConfig()

@@ -49,11 +49,11 @@ func (m *MockPortfolioService) GetSP500Symbols() ([]string, error) {
 	return args.Get(0).([]string), args.Error(1)
 }
 
-// TestCLI_Run prueba que el menú se imprima y que la opción 4 salga sin errores.
+// TestCLI_Run tests that the menu prints and that option 4 exits without errors.
 func TestCLI_Run(t *testing.T) {
 	mockService := new(MockPortfolioService)
 
-	// Simular la entrada del usuario: selecciona opción 4 (Exit)
+	// Simulate user login: select option 4 (Exit)
 	input := "4\n"
 	inputReader := strings.NewReader(input)
 	var outputBuffer bytes.Buffer
@@ -63,7 +63,7 @@ func TestCLI_Run(t *testing.T) {
 
 	output := outputBuffer.String()
 
-	// Verificar que el menú esté presente en la salida
+	// Verify that the menu is present at the output
 	expectedMenuItems := []string{
 		"Select an option:",
 		"1. View portfolios",
@@ -78,20 +78,20 @@ func TestCLI_Run(t *testing.T) {
 		}
 	}
 
-	// Verificar que al ingresar 4 se imprima "Exiting..."
+	// Verify that when 4 is entered, “Exiting..." is printed.
 	if !strings.Contains(output, "Exiting...") {
 		t.Errorf("Expected output to contain 'Exiting...', got '%s'", output)
 	}
 }
 
-// TestCLI_ViewPortfolios verifica que al seleccionar la opción 1 se llame a GetAllPortfolios()
-// y se maneje el caso de no haber carteras.
+// TestCLI_ViewPortfolios verifies that when option 1 is selected, GetAllPortfolios() is called.
+// and the case of no portfolios is handled.
 func TestCLI_ViewPortfolios_NoPortfolios(t *testing.T) {
 	mockService := new(MockPortfolioService)
-	// Configurar el mock para que GetAllPortfolios devuelva una lista vacía
+	// Configure the mock so that GetAllPortfolios returns an empty list
 	mockService.On("GetAllPortfolios").Return([]models.Portfolio{}, nil)
 
-	// Simular la entrada del usuario: opción 1 (ver carteras), luego 4 (salir)
+	// Simulate user login: option 1 (view portfolios), then 4 (exit)
 	input := "1\n4\n"
 	inputReader := strings.NewReader(input)
 	var outputBuffer bytes.Buffer
@@ -101,10 +101,10 @@ func TestCLI_ViewPortfolios_NoPortfolios(t *testing.T) {
 
 	output := outputBuffer.String()
 
-	// Verificar que llame a GetAllPortfolios al menos una vez
+	// Verify that GetAllPortfolios is called at least once
 	mockService.AssertExpectations(t)
 
-	// Verificar la salida
+	// Verify the output
 	if !strings.Contains(output, "No portfolios available.") {
 		t.Errorf("Expected output to contain 'No portfolios available.', got '%s'", output)
 	}

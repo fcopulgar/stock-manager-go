@@ -9,33 +9,33 @@ import (
 	"testing"
 )
 
-// TestViewPortfolios_NoPortfolios verifica el comportamiento de viewPortfolios() cuando no hay carteras.
+// TestViewPortfolios_NoPortfolios checks the behavior of viewPortfolios() when there are no portfolios.
 func TestViewPortfolios_NoPortfolios(t *testing.T) {
 	mockService := new(MockPortfolioService)
 
-	// Configurar el mock para que GetAllPortfolios devuelva una lista vacía
+	// Configure the mock so that GetAllPortfolios returns an empty list
 	mockService.On("GetAllPortfolios").Return([]models.Portfolio{}, nil)
 
-	// No necesitamos que el usuario ingrese nada en este caso,
-	// porque viewPortfolios() solo lista carteras y luego pide un ID.
-	// Simularemos que el usuario solo presiona Enter para volver.
-	input := "\n" // Usuario no ingresa ningún ID, solo Enter
+	// We don't need the user to enter anything in this case,
+	// because viewPortfolios() just lists portfolios and then asks for an ID.
+	// We'll simulate that the user just presses Enter to return.
+	input := "\n" // User does not enter any ID, just Enter
 	inputReader := strings.NewReader(input)
 	var outputBuffer bytes.Buffer
 
-	// Crear la instancia de CLI con el mock
+	// Create the CLI instance with the mock
 	cli := CLI{
 		portfolioService: mockService,
 		reader:           bufio.NewReader(inputReader),
 		writer:           &outputBuffer,
 	}
 
-	// Llamar directamente a viewPortfolios()
+	// Directly call viewPortfolios()
 	cli.viewPortfolios()
 
 	output := outputBuffer.String()
 
-	// Verificar que la salida contenga "No portfolios available."
+	// Verify that the output contains “No portfolios available."
 	if !strings.Contains(output, "No portfolios available.") {
 		t.Errorf("Expected output to contain 'No portfolios available.', got '%s'", output)
 	}
@@ -43,14 +43,14 @@ func TestViewPortfolios_NoPortfolios(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-// TestCreatePortfolioManual_NoInput prueba que si el usuario no ingresa acciones, se muestre el mensaje correspondiente.
+// TestCreatePortfolioManual_NoInput tests that if the user does not enter actions, the corresponding message is displayed.
 func TestCreatePortfolioManual_NoInput(t *testing.T) {
 	mockService := new(MockPortfolioService)
 
-	// Configurar el mock para GetSP500Symbols
+	// Configure the mock for GetSP500Symbols
 	mockService.On("GetSP500Symbols").Return([]string{"AAPL", "MSFT"}, nil)
 
-	// Simulamos que el usuario ingresa el nombre de la cartera ("My Portfolio") y luego presiona Enter sin seleccionar acciones.
+	// We simulate that the user enters the name of the portfolio (“My Portfolio”) and then presses Enter without selecting stocks.
 	input := "My Portfolio\n\n"
 	inputReader := strings.NewReader(input)
 	var outputBuffer bytes.Buffer
@@ -65,32 +65,32 @@ func TestCreatePortfolioManual_NoInput(t *testing.T) {
 
 	output := outputBuffer.String()
 
-	// Verificar que la salida contenga "No stocks added to the portfolio."
+	// Verify that the output contains “No stocks added to the portfolio.”
 	if !strings.Contains(output, "No stocks added to the portfolio.") {
 		t.Errorf("Expected output to contain 'No stocks added to the portfolio.', got '%s'", output)
 	}
 
-	// Dado que el usuario no agregó acciones, no se debe llamar a CreatePortfolioManual.
+	// Since the user did not add shares, CreatePortfolioManual should not be called.
 	mockService.AssertNotCalled(t, "CreatePortfolioManual", mock.Anything)
 	mockService.AssertExpectations(t)
 }
 
-// TestCreatePortfolioManual_SingleStock prueba que si el usuario agrega una acción y una fecha válida, se cree la cartera.
+// TestCreatePortfolioManual_SingleStock tests that if the user adds a stock and a valid date, the portfolio is created.
 func TestCreatePortfolioManual_SingleStock(t *testing.T) {
 	mockService := new(MockPortfolioService)
 
-	// Configurar los mocks
+	// Configure the mocks
 	mockService.On("GetSP500Symbols").Return([]string{"AAPL"}, nil)
-	// Cuando se llama a GetPriceClose con AAPL y una fecha, devolveremos un precio fijo.
+	// When GetPriceClose is called with AAPL and a date, we will return a fixed price.
 	mockService.On("GetPriceClose", "AAPL", mock.AnythingOfType("time.Time")).Return(300.0, nil)
 	mockService.On("CreatePortfolioManual", mock.AnythingOfType("*models.Portfolio")).Return(nil)
 
-	// Simular entrada:
-	// Nombre de la cartera: "Test Portfolio"
-	// Seleccionar stock 1 (AAPL)
-	// Cantidad: 10
-	// Fecha de compra: 2020-01-15
-	// Presionar Enter para terminar selección
+	// Simulate entry:
+	// Portfolio name: “Test Portfolio”.
+	// Select stock 1 (AAPL)
+	// Quantity: 10
+	// Purchase date: 2020-01-15
+	// Press Enter to end selection
 	input := "Test Portfolio\n1\n10\n2020-01-15\n\n"
 	inputReader := strings.NewReader(input)
 	var outputBuffer bytes.Buffer
@@ -105,12 +105,12 @@ func TestCreatePortfolioManual_SingleStock(t *testing.T) {
 
 	output := outputBuffer.String()
 
-	// Verificar que indique "Portfolio created successfully."
+	// Verify that it indicates “Portfolio created successfully”.
 	if !strings.Contains(output, "Portfolio created successfully.") {
 		t.Errorf("Expected output to contain 'Portfolio created successfully.', got '%s'", output)
 	}
 
-	// Verificar que CreatePortfolioManual se haya llamado con la cartera esperada
+	// Verify that CreatePortfolioManual has been called with the expected portfolio
 	mockService.AssertCalled(t, "CreatePortfolioManual", mock.MatchedBy(func(p *models.Portfolio) bool {
 		if p.Name != "Test Portfolio" {
 			return false
