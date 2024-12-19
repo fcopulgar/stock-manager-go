@@ -14,8 +14,9 @@ import (
 )
 
 type FinancialModelingPrepService struct {
-	APIKey string
-	Client *resty.Client
+	APIKey  string
+	Client  *resty.Client
+	BaseURL string
 }
 
 type StockPrices struct {
@@ -25,6 +26,7 @@ type StockPrices struct {
 
 func NewFinancialModelingPrepService(apiKey string) *FinancialModelingPrepService {
 	client := resty.New()
+	client.SetBaseURL("https://financialmodelingprep.com")
 	return &FinancialModelingPrepService{
 		APIKey: apiKey,
 		Client: client,
@@ -48,7 +50,7 @@ func (fmp *FinancialModelingPrepService) GetPriceClose(symbol string, date time.
 
 	stockPrices, err := fmp.fetchStockPrices(symbol, date)
 	if err != nil {
-		fmt.Printf("Failed to retrieve close price for %s on %s.\n", symbol, dateStr)
+		fmt.Printf("Failed to retrieve close price for %s on %s. %s\n", symbol, dateStr, err)
 		return fmp.promptUserForPrice(symbol, date, "close")
 	}
 
@@ -63,10 +65,10 @@ func (fmp *FinancialModelingPrepService) fetchStockPrices(symbol string, date ti
 	dateStr := date.Format("2006-01-02")
 	endDateStr := date.AddDate(0, 0, 1).Format("2006-01-02")
 
-	url := fmt.Sprintf("https://financialmodelingprep.com/api/v3/historical-price-full/%s?from=%s&to=%s&apikey=%s",
+	path := fmt.Sprintf("/api/v3/historical-price-full/%s?from=%s&to=%s&apikey=%s",
 		symbol, dateStr, endDateStr, fmp.APIKey)
 
-	resp, err := fmp.Client.R().Get(url)
+	resp, err := fmp.Client.R().Get(path)
 	if err != nil {
 		return StockPrices{}, err
 	}
