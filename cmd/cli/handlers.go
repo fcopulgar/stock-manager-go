@@ -1,9 +1,7 @@
-// cli/handlers.go
 package cli
 
 import (
 	"fmt"
-	"github.com/fcopulgar/stock-manager-go/api"
 	"github.com/fcopulgar/stock-manager-go/models"
 	"math/rand"
 	"strconv"
@@ -137,7 +135,7 @@ func (cli *CLI) createPortfolioManual() {
 	}
 	name = strings.TrimSpace(name)
 
-	symbols, err := api.GetSP500Symbols(&api.DefaultHTTPClient{})
+	symbols, err := cli.portfolioService.GetSP500Symbols()
 	if err != nil {
 		fmt.Fprintf(cli.writer, "Error retrieving S&P 500 symbols: %v\n", err)
 		return
@@ -233,7 +231,7 @@ func (cli *CLI) createPortfolioManual() {
 }
 
 func (cli *CLI) createPortfolioRandom() {
-	symbols, err := api.GetSP500Symbols(&api.DefaultHTTPClient{})
+	symbols, err := cli.portfolioService.GetSP500Symbols()
 	if err != nil {
 		fmt.Fprintf(cli.writer, "Error retrieving S&P 500 symbols: %v\n", err)
 		return

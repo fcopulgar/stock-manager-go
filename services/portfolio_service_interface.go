@@ -1,4 +1,3 @@
-// services/portfolio_service_interface.go
 package services
 
 import (
@@ -14,4 +13,5 @@ type PortfolioServiceInterface interface {
 	DeletePortfolio(id int) error
 	CalculateAPR(portfolio *models.Portfolio, startDate, endDate time.Time) (float64, error)
 	GetPriceClose(symbol string, date time.Time) (float64, error)
+	GetSP500Symbols() ([]string, error)
 }

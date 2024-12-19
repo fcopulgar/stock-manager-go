@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fcopulgar/stock-manager-go/api"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -33,7 +34,6 @@ func NewFinancialModelingPrepService(apiKey string) *FinancialModelingPrepServic
 func (fmp *FinancialModelingPrepService) GetPriceOpen(symbol string, date time.Time) (float64, error) {
 	dateStr := date.Format("2006-01-02")
 
-	// Fetch the price data from the API
 	stockPrices, err := fmp.fetchStockPrices(symbol, date)
 	if err != nil {
 		fmt.Printf("Failed to retrieve open price for %s on %s.\n", symbol, dateStr)
@@ -46,7 +46,6 @@ func (fmp *FinancialModelingPrepService) GetPriceOpen(symbol string, date time.T
 func (fmp *FinancialModelingPrepService) GetPriceClose(symbol string, date time.Time) (float64, error) {
 	dateStr := date.Format("2006-01-02")
 
-	// Fetch the price data from the API
 	stockPrices, err := fmp.fetchStockPrices(symbol, date)
 	if err != nil {
 		fmt.Printf("Failed to retrieve close price for %s on %s.\n", symbol, dateStr)
@@ -54,6 +53,10 @@ func (fmp *FinancialModelingPrepService) GetPriceClose(symbol string, date time.
 	}
 
 	return stockPrices.Close, nil
+}
+
+func (fmp *FinancialModelingPrepService) GetSP500Symbols() ([]string, error) {
+	return api.GetSP500Symbols(&api.DefaultHTTPClient{})
 }
 
 func (fmp *FinancialModelingPrepService) fetchStockPrices(symbol string, date time.Time) (StockPrices, error) {

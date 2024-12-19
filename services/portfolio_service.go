@@ -1,10 +1,11 @@
 package services
 
 import (
-	"github.com/fcopulgar/stock-manager-go/models"
-	"github.com/fcopulgar/stock-manager-go/repositories"
 	"math"
 	"time"
+
+	"github.com/fcopulgar/stock-manager-go/models"
+	"github.com/fcopulgar/stock-manager-go/repositories"
 )
 
 type PortfolioService struct {
@@ -50,16 +51,18 @@ func (ps *PortfolioService) CalculateAPR(portfolio *models.Portfolio, startDate,
 	}
 
 	years := endDate.Sub(startDate).Hours() / (24 * 365)
-
 	if years == 0 {
 		return 0, nil
 	}
 
 	apr := math.Pow(finalValue/initialValue, 1/years) - 1
-
 	return apr, nil
 }
 
 func (ps *PortfolioService) GetPriceClose(symbol string, date time.Time) (float64, error) {
 	return ps.StockService.GetPriceClose(symbol, date)
+}
+
+func (ps *PortfolioService) GetSP500Symbols() ([]string, error) {
+	return ps.StockService.GetSP500Symbols()
 }
